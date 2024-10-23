@@ -73,9 +73,23 @@ class Site(BaseObj):
         **kwargs,
     ):
 
+        adp = kwargs.get("adp", None)
         b_iso_or_equiv = kwargs.get("b_iso_or_equiv", None)
+        u_iso_or_equiv = kwargs.get("u_iso_or_equiv", None)
+
+        if b_iso_or_equiv is not None and u_iso_or_equiv is not None:
+            raise AttributeError("Cannot set both Biso and Uiso")
+
+        if adp is None and b_iso_or_equiv is None and u_iso_or_equiv is None:
+            adp = AtomicDisplacement("Uiso", Uiso=0)
+            kwargs["adp"] = adp
+
         if b_iso_or_equiv is not None:
             adp = AtomicDisplacement("Biso", Biso=b_iso_or_equiv)
+            kwargs["adp"] = adp
+
+        if u_iso_or_equiv is not None:
+            adp = AtomicDisplacement("Uiso", Uiso=u_iso_or_equiv)
             kwargs["adp"] = adp
 
         super(Site, self).__init__(
@@ -150,6 +164,22 @@ class Site(BaseObj):
     @property
     def z(self) -> Parameter:
         return self.fract_z
+
+    @property
+    def b_iso_or_equiv(self) -> Parameter:
+        if not hasattr(self, 'adp'):
+            return None
+        if not hasattr(self.adp, 'Biso'):
+            return None
+        return self.adp.Biso
+
+    @property
+    def u_iso_or_equiv(self) -> Parameter:
+        if not hasattr(self, 'adp'):
+            return None
+        if not hasattr(self.adp, 'Uiso'):
+            return None
+        return self.adp.Uiso
 
     @property
     def is_magnetic(self) -> bool:
