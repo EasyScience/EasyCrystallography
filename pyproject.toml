@@ -1,6 +1,6 @@
 
 [build-system]
-requires = ["hatchling<=1.21.0"] 
+requires = ["hatchling<=1.21.0"]
 build-backend = "hatchling.build"
 
 [tool.coverage.run]
@@ -43,7 +43,7 @@ dependencies = [
     "uncertainties",
     "xarray",
     "gemmi",
-    "easyscience",
+    "easyscience<1.1.1",
     "periodictable",
 ]
 
@@ -63,7 +63,7 @@ docs = [
     "readme-renderer",
     "Sphinx",
     "sphinx-rtd-theme",
-    "sphinx-autodoc-typehints", 
+    "sphinx-autodoc-typehints",
     "sphinx-gallery"
 ]
 
