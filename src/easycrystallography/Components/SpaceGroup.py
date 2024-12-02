@@ -260,11 +260,12 @@ class SpaceGroup(BaseObj):
 
             settings = self.find_settings_by_number(sg_data.number)
             hm_name = sg_data.hm
-            reference = sg_data.ext
+            reference = sg_data.ext  # THIS NEEDS TO BE SET TO CRYSPY DEFAULT
 
             if new_setting is None or new_setting == "" or new_setting == "\x00":
                 if reference != '\x00':
-                    setting = reference
+                    #setting = reference
+                    pass # let the library take care of default setting
             else:
                 try:
                     new_setting = int(new_setting)
