@@ -41,6 +41,7 @@ class SpaceGroup(CIF_Template):
                 '.name_H-M_alt',
             ],
         ],
+        ['setting', ['_IT_coordinate_system_code', '.IT_coordinate_system_code']],
     ]
 
     def __init__(self, reference_class=_SpaceGroup):
