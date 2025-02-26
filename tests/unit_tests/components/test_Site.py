@@ -97,7 +97,7 @@ def test_Site_creation(instance, element: List, expected: dict):
         ref = expected[field]
         obtained = getattr(d, field)
         if isinstance(obtained, Parameter):
-            assert obtained.raw_value == ref
+            assert obtained.value == ref
         else:
             assert obtained == ref
 
@@ -107,7 +107,7 @@ def test_Site_default(label, elm):
     site = Site(label, elm)
 
     assert site.name == label
-    assert site.specie.raw_value == elm
+    assert site.specie.value == elm
 
     positions = _SITE_DETAILS["position"]
     for item_label in ["fract_x", "fract_y", "fract_z"]:
@@ -115,7 +115,7 @@ def test_Site_default(label, elm):
         for key in positions.keys():
             test_key = key
             if key == "value":
-                test_key = "raw_value"
+                test_key = "value"
             assert getattr(item, test_key) == positions[key]
 
     occupancy = _SITE_DETAILS["occupancy"]
@@ -124,7 +124,7 @@ def test_Site_default(label, elm):
         for key in occupancy.keys():
             test_key = key
             if key == "value":
-                test_key = "raw_value"
+                test_key = "value"
             assert getattr(item, test_key) == occupancy[key]
 
 
@@ -144,7 +144,7 @@ def test_Site_short_pos(instance, element: List, expected: dict):
         else:
             expected_value = _SITE_DETAILS["position"]["value"]
         obtained = getattr(d, par[0])
-        assert expected_value == obtained.raw_value
+        assert expected_value == obtained.value
 
 
 #FAILED tests/unit_tests/Components/test_Site.py::test_Site_fract_dist[second_pt0-element24-expected24-instance0] - RuntimeError: dictionary changed size during iteration
@@ -212,17 +212,15 @@ def test_Site_as_dict(label, elm):
         "@class": "Site",
         "unique_name": None,
         "label": {
-            "@module": "easyscience.Objects.Variable",
-            "@class": "Descriptor",
+            "@module": "easyscience.Objects.variable.descriptor_str",
+            "@class": "DescriptorStr",
             "@version": easyscience.__version__,
             "unique_name": None,
             "name": "label",
             "value": label,
-            "units": "dimensionless",
             "description": "A unique identifier for a particular site in the crystal",
             "url": "https://docs.easydiffraction.org/lib/dictionaries/_atom_site/",
             "display_name": "label",
-            "enabled": True,
         },
         # Note that we are skipping specie checking as it it covered in another file...
         # 'specie': {
@@ -236,70 +234,70 @@ def test_Site_as_dict(label, elm):
         #                      'oxidation_state': 0.0
         #                  },
         #      'value':    elm,
-        #      'units':    'dimensionless',
+        #      'unit':    'dimensionless',
         #  },
         "occupancy": {
-            "@module": "easyscience.Objects.Variable",
+            "@module": "easyscience.Objects.variable.parameter",
             "@class": "Parameter",
             "@version": easyscience.__version__,
             "unique_name": None,
             "name": "occupancy",
             "value": 1.0,
-            "error": 0.0,
+            "variance": 0.0,
             "min": -np.inf,
             "max": np.inf,
             "fixed": True,
             "description": "The fraction of the atom type present at this site.",
             "url": "https://docs.easydiffraction.org/lib/dictionaries/_atom_site/",
-            "units": "dimensionless",
+            "unit": "dimensionless",
             "enabled": True,
         },
         "fract_x": {
-            "@module": "easyscience.Objects.Variable",
+            "@module": "easyscience.Objects.variable.parameter",
             "@class": "Parameter",
             "@version": easyscience.__version__,
             "unique_name": None,
             "name": "fract_x",
             "value": 0.0,
-            "error": 0.0,
+            "variance": 0.0,
             "min": -np.inf,
             "max": np.inf,
             "fixed": True,
             "description": "Atom-site coordinate as fractions of the unit cell length.",
             "url": "https://docs.easydiffraction.org/lib/dictionaries/_atom_site/",
-            "units": "dimensionless",
+            "unit": "dimensionless",
             "enabled": True,
         },
         "fract_y": {
-            "@module": "easyscience.Objects.Variable",
+            "@module": "easyscience.Objects.variable.parameter",
             "@class": "Parameter",
             "@version": easyscience.__version__,
             "unique_name": None,
             "name": "fract_y",
             "value": 0.0,
-            "error": 0.0,
+            "variance": 0.0,
             "min": -np.inf,
             "max": np.inf,
             "fixed": True,
             "description": "Atom-site coordinate as fractions of the unit cell length.",
             "url": "https://docs.easydiffraction.org/lib/dictionaries/_atom_site/",
-            "units": "dimensionless",
+            "unit": "dimensionless",
             "enabled": True,
         },
         "fract_z": {
-            "@module": "easyscience.Objects.Variable",
+            "@module": "easyscience.Objects.variable.parameter",
             "@class": "Parameter",
             "@version": easyscience.__version__,
             "unique_name": None,
             "name": "fract_z",
             "value": 0.0,
-            "error": 0.0,
+            "variance": 0.0,
             "min": -np.inf,
             "max": np.inf,
             "fixed": True,
             "description": "Atom-site coordinate as fractions of the unit cell length.",
             "url": "https://docs.easydiffraction.org/lib/dictionaries/_atom_site/",
-            "units": "dimensionless",
+            "unit": "dimensionless",
             "enabled": True,
         },
         "interface": None,
@@ -325,17 +323,15 @@ def test_Site_from_dict(label, elm):
         "@class": "Site",
         "unique_name": None,
         "label": {
-            "@module": "easyscience.Objects.Variable",
-            "@class": "Descriptor",
+            "@module": "easyscience.Objects.variable.descriptor_str",
+            "@class": "DescriptorStr",
             "@version": easyscience.__version__,
             "unique_name": None,
             "name": "label",
             "value": label,
-            "units": "dimensionless",
             "description": "A unique identifier for a particular site in the crystal",
             "url": "https://docs.easydiffraction.org/lib/dictionaries/_atom_site/",
             "display_name": "label",
-            "enabled": True,
         },
         "specie": {
             "@module": "easycrystallography.Components.Specie",
@@ -347,67 +343,67 @@ def test_Site_from_dict(label, elm):
             "units": "dimensionless",
         },
         "occupancy": {
-            "@module": "easyscience.Objects.Variable",
+            "@module": "easyscience.Objects.variable.parameter",
             "@class": "Parameter",
             "@version": easyscience.__version__,
             "unique_name": None,
             "name": "occupancy",
             "value": 1.0,
-            "error": 0.0,
+            "variance": 0.0,
             "min": -np.inf,
             "max": np.inf,
             "fixed": True,
             "description": "The fraction of the atom type present at this site.",
             "url": "https://docs.easydiffraction.org/lib/dictionaries/_atom_site/",
-            "units": "dimensionless",
+            "unit": "dimensionless",
             "enabled": True,
         },
         "fract_x": {
-            "@module": "easyscience.Objects.Variable",
+            "@module": "easyscience.Objects.variable.parameter",
             "@class": "Parameter",
             "@version": easyscience.__version__,
             "unique_name": None,
             "name": "fract_x",
             "value": 0.0,
-            "error": 0.0,
+            "variance": 0.0,
             "min": -np.inf,
             "max": np.inf,
             "fixed": True,
             "description": "Atom-site coordinate as fractions of the unit cell length.",
             "url": "https://docs.easydiffraction.org/lib/dictionaries/_atom_site/",
-            "units": "dimensionless",
+            "unit": "dimensionless",
             "enabled": True,
         },
         "fract_y": {
-            "@module": "easyscience.Objects.Variable",
+            "@module": "easyscience.Objects.variable.parameter",
             "@class": "Parameter",
             "@version": easyscience.__version__,
             "unique_name": None,
             "name": "fract_y",
             "value": 0.0,
-            "error": 0.0,
+            "variance": 0.0,
             "min": -np.inf,
             "max": np.inf,
             "fixed": True,
             "description": "Atom-site coordinate as fractions of the unit cell length.",
             "url": "https://docs.easydiffraction.org/lib/dictionaries/_atom_site/",
-            "units": "dimensionless",
+            "unit": "dimensionless",
             "enabled": True,
         },
         "fract_z": {
-            "@module": "easyscience.Objects.Variable",
+            "@module": "easyscience.Objects.variable.parameter",
             "@class": "Parameter",
             "@version": easyscience.__version__,
             "unique_name": None,
             "name": "fract_z",
             "value": 0.0,
-            "error": 0.0,
+            "variance": 0.0,
             "min": -np.inf,
             "max": np.inf,
             "fixed": True,
             "description": "Atom-site coordinate as fractions of the unit cell length.",
             "url": "https://docs.easydiffraction.org/lib/dictionaries/_atom_site/",
-            "units": "dimensionless",
+            "unit": "dimensionless",
             "enabled": True,
         },
         "interface": None,

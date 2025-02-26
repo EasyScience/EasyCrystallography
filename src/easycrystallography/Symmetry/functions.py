@@ -1,3 +1,5 @@
+import gemmi
+
 ACCESIBLE_IT_NUMBER_TRICLINIC_SYSTEM = tuple(range(1, 3))
 ACCESIBLE_IT_NUMBER_MONOCLINIC_SYSTEM = tuple(range(3, 16))
 ACCESIBLE_IT_NUMBER_ORTHORHOMBIC_SYSTEM = tuple(range(16, 75))
@@ -76,3 +78,18 @@ def get_crystal_system_by_it_number(it_number: int) -> str:
     else:
         res = None
     return res
+
+
+def get_spacegroup_by_name_ext(number, setting):
+    tables = gemmi.spacegroup_table()
+
+    for sg in tables:
+        if sg.number == number:
+            # default qualifier, not present in the table
+            # so we neeed to account for it
+            default_setting = get_default_it_coordinate_system_code_by_it_number(number)
+            if setting == default_setting:
+                return sg
+            if setting in sg.qualifier or setting in sg.ext:
+                return sg
+    return None

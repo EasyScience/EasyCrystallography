@@ -15,8 +15,8 @@ from typing import Union
 import numpy as np
 from easyscience.Objects.Groups import BaseCollection
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.Variable import Descriptor
-from easyscience.Objects.Variable import Parameter
+from easyscience.Objects.variable import DescriptorStr as Descriptor
+from easyscience.Objects.variable import Parameter
 
 from .AtomicDisplacement import AtomicDisplacement
 from .Lattice import PeriodicLattice
@@ -137,14 +137,11 @@ class Site(BaseObj):
         self.interface = interface
 
     def __repr__(self) -> str:
-        return (
-            f'Atom {self.name} ({self.specie.raw_value}) @'
-            f' ({self.fract_x.raw_value}, {self.fract_y.raw_value}, {self.fract_z.raw_value})'
-        )
+        return f'Atom {self.name} ({self.specie.value}) @ ({self.fract_x.value}, {self.fract_y.value}, {self.fract_z.value})'
 
     @property
     def name(self) -> str:
-        return self.label.raw_value
+        return self.label.value
 
     @property
     def fract_coords(self) -> np.ndarray:
@@ -154,7 +151,7 @@ class Site(BaseObj):
         :return: Array containing fractional co-ordinates
         :rtype: np.ndarray
         """
-        return np.array([self.fract_x.raw_value, self.fract_y.raw_value, self.fract_z.raw_value])
+        return np.array([self.fract_x.value, self.fract_y.value, self.fract_z.value])
 
     def fract_distance(self, other_site: S) -> float:
         """
@@ -313,23 +310,23 @@ class Atoms(BaseCollection):
     # def append(self, item: S):
     #     if not issubclass(type(item), Site):
     #         raise TypeError("Item must be a Site")
-    #     if item.label.raw_value in self.atom_labels:
+    #     if item.label.value in self.atom_labels:
     #         raise AttributeError(
-    #             f"An atom of name {item.label.raw_value} already exists."
+    #             f"An atom of name {item.label.value} already exists."
     #         )
     #     super(Atoms, self).append(item)
 
     @property
     def atom_labels(self) -> List[str]:
-        return [atom.label.raw_value for atom in self]
+        return [atom.label.value for atom in self]
 
     @property
     def atom_species(self) -> List[str]:
-        return [atom.specie.raw_value for atom in self]
+        return [atom.specie.value for atom in self]
 
     @property
     def atom_occupancies(self) -> np.ndarray:
-        return np.array([atom.occupancy.raw_value for atom in self])
+        return np.array([atom.occupancy.value for atom in self])
 
 
 A = TypeVar('A', bound=Atoms)
@@ -370,8 +367,8 @@ class PeriodicAtoms(Atoms):
     def append(self, item: S):
         if not issubclass(item.__class__, Site):
             raise TypeError('Item must be a Site or periodic site')
-        if item.label.raw_value in self.atom_labels:
-            raise AttributeError(f'An atom of name {item.label.raw_value} already exists.')
+        if item.label.value in self.atom_labels:
+            raise AttributeError(f'An atom of name {item.label.value} already exists.')
         # if isinstance(item, Site):
         item = self._SITE_CLASS.from_site(self.lattice, item)
         super(PeriodicAtoms, self).append(item)
@@ -381,5 +378,5 @@ class PeriodicAtoms(Atoms):
         for item in self:
             if magnetic_only and not item.is_magnetic:
                 continue
-            orbit_dict[item.label.raw_value] = item.get_orbit()
+            orbit_dict[item.label.value] = item.get_orbit()
         return orbit_dict

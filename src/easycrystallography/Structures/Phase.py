@@ -14,8 +14,8 @@ from typing import Union
 import numpy as np
 from easyscience.Objects.Groups import BaseCollection
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.ObjectClasses import Descriptor
-from easyscience.Objects.ObjectClasses import Parameter
+from easyscience.Objects.variable import DescriptorStr as Descriptor
+from easyscience.Objects.variable import Parameter
 
 from easycrystallography.Components.Lattice import Lattice
 from easycrystallography.Components.Lattice import PeriodicLattice
@@ -151,6 +151,12 @@ class Phase(BaseObj):
     def space_group(self):
         return self._spacegroup
 
+    @space_group.setter
+    def space_group(self, value: Union[SpaceGroup, str]):
+        if isinstance(value, str):
+            value = SpaceGroup(value)
+        self._spacegroup = value
+
     def set_spacegroup(self, value):
         if self._enforce_sym:
             self.cell.space_group_HM_name = value
@@ -239,7 +245,7 @@ class Phase(BaseObj):
         for site in self.atoms:
             unique_sites = self._generate_positions(site, extent)
             site_positions = unique_sites - self.center
-            sites[site.label.raw_value] = (
+            sites[site.label.value] = (
                 site_positions[
                     np.all(site_positions >= -self.atom_tolerance, axis=1)
                     & np.all(site_positions <= extent + self.atom_tolerance, axis=1),

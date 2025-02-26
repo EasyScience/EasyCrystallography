@@ -345,7 +345,7 @@ class Atoms(CIF_Template):
         atoms = []
         for a in atom_dict.values():
             obj = self._CIF_CLASS._SITE_CLASS(**a)
-            label = obj.label.raw_value
+            label = obj.label.value
             if label in error_dict.keys():
                 for atr in error_dict[label].keys():
                     setattr(getattr(obj, atr), 'error', error_dict[label][atr])

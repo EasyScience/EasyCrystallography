@@ -130,7 +130,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-24.04, windows-2022, macos-13, macos-14]
-        python-version: ['3.9', '3.10', '3.11', '3.12']
+        python-version: ['3.10', '3.11', '3.12', '3.13']
 
     runs-on: ${{ matrix.os }}
 
@@ -200,7 +200,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-24.04, windows-2022, macos-13, macos-14]
-        python-version: ['3.9', '3.10', '3.11', '3.12']
+        python-version: ['3.10', '3.11', '3.12', '3.13']
 
     runs-on: ${{ matrix.os }}
 
@@ -221,12 +221,17 @@ jobs:
             }}_${{ runner.arch }}
           path: . # directory to extract downloaded zipped artifacts
 
-      # The local version must be higher than the PyPI version for pip to
-      # prefer the local version. So, after a new release and a new tag,
-      # remember to merge the master branch with the develop branch,
-      # and then create a new feature branch from the develop branch.
+      # The following command is used to install the easycrystallography
+      # package created in the previous job and downloaded to the dist folder.
+      # The following criteria are used:
+      # - Cross-platform solution.
+      # - The full name of the wheel file is unknown.
+      # - The relative path to the directory containing the wheel file is known
+      # - Package must be installed, including 'dev' extras
       - name: Install Python package from previous job with 'dev' extras
-        run: pip install 'easycrystallography[dev]' --find-links=dist
+        run:
+          pip install "$(python -c 'import glob;
+          print(glob.glob("dist/*.whl")[0])')[dev]"
 
       - name: Run Python tests
         run: pytest tests/ --color=yes -n auto

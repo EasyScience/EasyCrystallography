@@ -16,22 +16,21 @@ classifiers = [
   'Operating System :: OS Independent',
   'Programming Language :: Python :: 3 :: Only',
   'Programming Language :: Python :: 3',
-  'Programming Language :: Python :: 3.9',
   'Programming Language :: Python :: 3.10',
   'Programming Language :: Python :: 3.11',
   'Programming Language :: Python :: 3.12',
+  'Programming Language :: Python :: 3.13',
 ]
-requires-python = '>=3.9,<3.13'
+requires-python = '>=3.10,<3.14'
 dependencies = [
-  'asteval',       # For evaluating mathematical expressions
-  'easyscience',   # The base library of the EasyScience framework
-  'gemmi',         # For handling CIF files
-  'numpy<2.0',     # For numerical calculations
-  'periodictable', # For atomic properties
-  'pint',          # For units
-  'uncertainties', # For error propagation
-  'versioningit',  # For versioning
-  'xarray',        # For handling data arrays
+  'asteval',                                                                  # For evaluating mathematical expressions
+  'easyscience @ git+https://github.com/EasyScience/EasyScience.git@develop', # The base library of the EasyScience framework
+  'gemmi',                                                                    # For handling CIF files
+  'numpy',                                                                    # For numerical calculations
+  'periodictable',                                                            # For atomic properties
+  'uncertainties',                                                            # For error propagation
+  'versioningit',                                                             # For versioning
+  'xarray',                                                                   # For handling data arrays
 ]
 
 [project.optional-dependencies]

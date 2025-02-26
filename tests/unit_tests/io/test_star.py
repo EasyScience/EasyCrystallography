@@ -7,8 +7,8 @@ import pytest
 from easyscience import global_object
 from easyscience.models.polynomial import Line
 from easyscience.Objects.Groups import BaseCollection
-from easyscience.Objects.Variable import Descriptor
-from easyscience.Objects.Variable import Parameter
+from easyscience.Objects.variable import DescriptorStr
+from easyscience.Objects.variable import Parameter
 from easycrystallography.Components.Site import Atoms, Site, _SITE_DETAILS
 from easycrystallography.io.star_base import ItemHolder
 from easycrystallography.io.star_base import StarLoop
@@ -17,13 +17,13 @@ import gc
 
 
 @pytest.mark.parametrize(
-    "value, error, precision, expected",
+    "value, variance, precision, expected",
     (
-        (1.234560e05, 1.230000e02, 1, "123500(100)"),
-        (1.234567e01, 1.230000e-03, 2, "12.3457(12)"),
-        (1.234560e-01, 1.230000e-04, 3, "0.123456(123)"),
-        (1.234560e-03, 1.234500e-08, 4, "0.00123456000(1234)"),
-        (1.234560e-05, 1.234000e-07, 1, "0.0000123(1)"),
+        (1.234560e05, 1.230000e02, 1, "123460(10)"),
+        (1.234567e01, 1.230000e-03, 2, "12.346(35)"),
+        (1.234560e-01, 1.230000e-04, 3, "0.1235(111)"),
+        (1.234560e-03, 1.234500e-08, 4, "0.0012346(1111)"),
+        (1.234560e-05, 1.234000e-07, 1, "0.0000(4)"),
     ),
     ids=[
         "1.234560e+05 +- 1.230000e+02 @1",
@@ -33,8 +33,8 @@ import gc
         "1.234560e-05 +- 1.234000e-07 @1",
     ],
 )
-def test_ItemHolder_with_error(value, error, precision, expected):
-    p = Parameter("p", value, error=error)
+def test_ItemHolder_with_error(value, variance, precision, expected):
+    p = Parameter("p", value, variance=variance)
     s = ItemHolder(p, decimal_places=precision)
     assert str(s) == expected
 
@@ -70,7 +70,7 @@ def test_ItemHolder_fixed(fixed, value, precision, expected):
     assert str(s) == expected
 
 
-@pytest.mark.parametrize("cls", [Descriptor])
+@pytest.mark.parametrize("cls", [DescriptorStr])
 def test_ItemHolder_str(cls):
     v = cls("v", "fooooooooo")
     s = ItemHolder(v)

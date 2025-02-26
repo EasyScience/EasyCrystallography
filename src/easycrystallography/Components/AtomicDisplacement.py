@@ -13,8 +13,8 @@ from typing import Union
 
 import numpy as np
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.ObjectClasses import Descriptor
-from easyscience.Objects.ObjectClasses import Parameter
+from easyscience.Objects.variable import DescriptorStr as Descriptor
+from easyscience.Objects.variable import Parameter
 from easyscience.Utils.classTools import addProp
 from easyscience.Utils.classTools import removeProp
 
@@ -33,7 +33,7 @@ _ANIO_DETAILS = {
         'parameters.',
         'url': 'https://docs.easydiffraction.org/lib/dictionaries/_atom_site/',
         'value': 0.0,
-        'units': 'angstrom^2',
+        'unit': 'angstrom^2',
         'fixed': True,
     },
     'Uiso': {
@@ -43,7 +43,7 @@ _ANIO_DETAILS = {
         'value': 0.0,
         'min': 0,
         'max': np.inf,
-        'units': 'angstrom^2',
+        'unit': 'angstrom^2',
         'fixed': True,
     },
     'Bani': {
@@ -51,7 +51,7 @@ _ANIO_DETAILS = {
         'the structure-factor term.',
         'url': 'https://docs.easydiffraction.org/lib/dictionaries/_atom_site/',
         'value': 0.0,
-        'units': 'angstrom^2',
+        'unit': 'angstrom^2',
         'fixed': True,
     },
     'Biso': {
@@ -62,7 +62,7 @@ _ANIO_DETAILS = {
         'value': 0.0,
         'min': 0,
         'max': np.inf,
-        'units': 'angstrom^2',
+        'unit': 'angstrom^2',
         'fixed': True,
     },
 }
@@ -77,20 +77,20 @@ class AdpBase(BaseObj):
         matrix = np.zeros([3, 3])
         pars = self.get_parameters()
         if len(pars) == 1:
-            np.fill_diagonal(matrix, pars[0].raw_value)
+            np.fill_diagonal(matrix, pars[0].value)
         elif len(pars) == 6:
-            matrix[0, 0] = pars[0].raw_value
-            matrix[0, 1] = pars[1].raw_value
-            matrix[0, 2] = pars[2].raw_value
-            matrix[1, 1] = pars[3].raw_value
-            matrix[1, 2] = pars[4].raw_value
-            matrix[2, 2] = pars[5].raw_value
+            matrix[0, 0] = pars[0].value
+            matrix[0, 1] = pars[1].value
+            matrix[0, 2] = pars[2].value
+            matrix[1, 1] = pars[3].value
+            matrix[1, 2] = pars[4].value
+            matrix[2, 2] = pars[5].value
         return matrix
 
     def __repr__(self):
         s = f'{self.name} - ('
         for par in self.get_parameters():
-            s += f'{par.name}: {par.raw_value}, '
+            s += f'{par.name}: {par.value}, '
         s = s[:-2] + ')'
         return s
 
@@ -139,7 +139,7 @@ class Anisotropic(AdpBase):
             self.Uiso_ani = Uiso_ani
         else:
             # for cubic, tetragonal, and orthorhombic systems
-            self.Uiso_ani = (self.U_11.raw_value + self.U_22.raw_value + self.U_33.raw_value) / 3.0
+            self.Uiso_ani = (self.U_11.value + self.U_22.value + self.U_33.value) / 3.0
         self.interface = interface
 
 
@@ -236,7 +236,7 @@ class AtomicDisplacement(BaseObj):
             adp_type = 'Uiso'
         if isinstance(adp_type, str):
             adp_type = Descriptor('adp_type', adp_type)
-        adp_class_name = adp_type.raw_value
+        adp_class_name = adp_type.value
         if adp_class_name in _AVAILABLE_ISO_TYPES.keys():
             adp_class = _AVAILABLE_ISO_TYPES[adp_class_name]
             # enable passing ADP parameters to constructor

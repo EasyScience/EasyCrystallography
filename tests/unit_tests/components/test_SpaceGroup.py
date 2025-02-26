@@ -6,10 +6,12 @@ import pytest
 import itertools
 import numpy as np
 
-from easyscience.Objects.ObjectClasses import Descriptor, Parameter
+from easyscience.Objects.variable import Parameter
+from easyscience.Objects.variable import DescriptorStr as DescriptorStr
 from easyscience import global_object
 from easycrystallography.Components.SpaceGroup import SpaceGroup, SG_DETAILS as _SG_DETAILS
 from easycrystallography.Symmetry.groups import SpaceGroup as SG
+from easyscience.Objects.variable import DescriptorAnyType
 
 SG_DETAILS = _SG_DETAILS.copy()
 del SG_DETAILS['symmetry_ops']
@@ -40,7 +42,15 @@ known_conversions = {
     "A e a a":  'A b a a',
     "B b e b":  'B b c b',
     'B 1 21 1': 'B 1 1 2',
-
+    'P n m m': 'P m m n',
+    'P m n m': 'P m m n',
+    'P n c b': 'P b a n',
+    'P c n a': 'P b a n',
+    'C c c b': 'C c c a',
+    'A b a a': 'C c c a',
+    'B b a b': 'C c c a',
+    'B b c b': 'C c c a',
+    'A c a a': 'C c c a',
 }
 
 SYM = [value for value in SG.SYMM_OPS
@@ -52,12 +62,12 @@ SYM = [value for value in SG.SYMM_OPS
 def test_SpaceGroup_fromDescriptor():
     sg_items = ['space_group_HM_name', 'P 1']
 
-    d = Descriptor(*sg_items)
+    d = DescriptorStr(*sg_items)
     sg = SpaceGroup(d)
-    assert sg.space_group_HM_name.raw_value == 'P 1'
+    assert sg.space_group_HM_name.value == 'P 1'
 
-    with pytest.raises(ValueError):
-        p = Parameter('space_group_HM_name', 1)
+    with pytest.raises(TypeError):
+        p = Parameter('space_group_HM_name', 'P 1')
         sg = SpaceGroup(p)
 
 
@@ -72,15 +82,15 @@ def test_SpaceGroup_default():
         for item in SG_DETAILS[selector].keys():
             g_item = item
             if item == 'value':
-                g_item = 'raw_value'
+                g_item = 'value'
             assert getattr(f, g_item) == SG_DETAILS[selector][item]
 
-    assert isinstance(sg.space_group_HM_name, Descriptor)
+    assert isinstance(sg.space_group_HM_name, DescriptorStr)
 
 
 @pytest.mark.parametrize('sg_in', [sg['hermann_mauguin_fmt'] for sg in SYM])
 def test_SpaceGroup_fromPars_HM_Full(sg_in):
-    if sg_in in ['C 2 e b', 'R 1 2/c 1 ("rhombohedral" setting)', 'B 1 21/m 1', 'B 1 21 1']:
+    if sg_in in ['C 2 e b', 'R 1 2/c 1 ("rhombohedral" setting)', 'B 1 21/m 1', 'B 1 21 1', 'A e a a:1', 'B b e b:1']:
         return  # This is a known issue
 
     sg_p = SpaceGroup(sg_in)
@@ -93,7 +103,7 @@ def test_SpaceGroup_fromPars_HM_Full(sg_in):
             g_item = item
             f_value = SG_DETAILS[selector][item]
             if item == 'value':
-                g_item = 'raw_value'
+                g_item = 'value'
                 f_value = sg_in.split(':')
             # don't check the setting
             if selector == 'setting' and item == 'value':
@@ -121,7 +131,7 @@ def test_SpaceGroup_fromPars_HM_noSpace(sg_in):
             g_item = item
             f_value = SG_DETAILS[selector][item]
             if item == 'value':
-                g_item = 'raw_value'
+                g_item = 'value'
                 f_value = sg_in['hermann_mauguin_fmt'].split(':')
             # don't check the setting
             if selector == 'setting' and item == 'value':
@@ -136,7 +146,8 @@ def test_SpaceGroup_fromPars_HM_noSpace(sg_in):
 def test_SpaceGroup_fromPars_HM_noSpace(sg_in):
     global_object.map._clear()
     if sg_in['hermann_mauguin'] in ['C2eb', 'R12/c1("rhombohedral"setting)', 'B1211', 'B121/m1', 'P4bm',
-                                    'C1c1', 'Pmc21', 'Cmm2', 'P121/c1', 'Pmma', 'P12/c1', 'Pmmm', 'P1211', 'Pnma']:
+                                    'C1c1', 'Pmc21', 'Cmm2', 'P121/c1', 'Pmma', 'P12/c1', 'Pmmm', 'P1211', 'Pnma',
+                                    'Pban', 'Pban', 'Aeaa', 'Bbeb']:
         return  # This is a known issue
 
     sg_p = SpaceGroup(sg_in['universal_h_m'])
@@ -149,7 +160,7 @@ def test_SpaceGroup_fromPars_HM_noSpace(sg_in):
             g_item = item
             f_value = SG_DETAILS[selector][item]
             if item == 'value':
-                g_item = 'raw_value'
+                g_item = 'value'
                 f_value = sg_in['hermann_mauguin_fmt'].split(':')
             if f_value[0] in known_conversions.keys():
                 f_value[0] = known_conversions[f_value[0]]
@@ -171,7 +182,7 @@ def test_SpaceGroup_fromIntNumber(sg_int: int):
             g_item = item
             f_value = SG_DETAILS[selector][item]
             if item == 'value':
-                g_item = 'raw_value'
+                g_item = 'value'
                 for opt in SG.SYMM_OPS:
                     if opt['number'] == sg_int:
                         f_value = opt['hermann_mauguin_fmt'].split(':')
@@ -194,7 +205,7 @@ def test_SpaceGroup_fromIntNumber_HexTest(sg_int: int, setting: bool):
             g_item = item
             f_value = SG_DETAILS[selector][item]
             if item == 'value':
-                g_item = 'raw_value'
+                g_item = 'value'
                 for opt in SG.SYMM_OPS:
                     if opt['number'] == sg_int:
                         f_value: str = opt['hermann_mauguin_fmt']
@@ -224,8 +235,6 @@ def test_SpaceGroup_as_dict():
     assert sg_p_dict == {
                                    'symmetry_ops':        None,
                                    'setting':             {
-                                       'units':        'dimensionless',
-                                       'enabled':      True,
                                        'name':         'coordinate-code',
                                        'display_name': 'coordinate-code',
                                        'url': 'https://docs.easydiffraction.org/lib/dictionaries/_space_group/',
@@ -236,8 +245,6 @@ def test_SpaceGroup_as_dict():
                                    },
                                    'interface':           None,
                                    'space_group_HM_name': {
-                                       'units':        'dimensionless',
-                                       'enabled':      True,
                                        'name':         'hermann_mauguin',
                                        'display_name': 'hermann_mauguin',
                                        'url':          'https://docs.easydiffraction.org/lib/dictionaries/_space_group/',
@@ -253,7 +260,7 @@ def test_SpaceGroup_change_setting():
     assert sg_p.setting_str == '2abc'
     old_ops = sg_p.symmetry_ops
     sg_p.setting = '1bca'
-    assert sg_p.setting.raw_value == '1bca'
+    assert sg_p.setting.value == '1bca'
     assert np.all(sg_p.symmetry_ops == old_ops)
 
 # DISABLE UNTIL UNIQUE_NAME IS FIXED

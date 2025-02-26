@@ -45,3 +45,6 @@ dist/
 *.pytest_cache/
 .tox
 .coveragerc
+
+# VS code
+.vscode/settings.json

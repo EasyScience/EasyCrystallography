@@ -25,7 +25,7 @@ import numpy as np
 from easyscience import ureg
 from easyscience.Constraints import ObjConstraint
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.ObjectClasses import Parameter
+from easyscience.Objects.variable import Parameter
 from easyscience.Utils.decorators import memoized
 
 from .SpaceGroup import SpaceGroup
@@ -41,18 +41,18 @@ CELL_DETAILS = {
         'description': 'Unit-cell length of the selected structure in angstroms.',
         'url': 'https://docs.easydiffraction.org/lib/dictionaries/_cell/',
         'value': 3,
-        'units': 'angstrom',
+        'unit': 'angstrom',
         'min': 0,
-        'max': np.Inf,
+        'max': np.inf,
         'fixed': True,
     },
     'angle': {
         'description': 'Unit-cell angle of the selected structure in degrees.',
         'url': 'https://docs.easydiffraction.org/lib/dictionaries/_cell/',
         'value': 90,
-        'units': 'deg',
+        'unit': 'deg',
         'min': 0,
-        'max': np.Inf,
+        'max': np.inf,
         'fixed': True,
     },
 }
@@ -81,7 +81,7 @@ class Lattice(BaseObj):
         **kwargs,
     ):
         THESE_CELL_DETAILS = deepcopy(CELL_DETAILS)
-        THESE_CELL_DETAILS['angle']['units'] = ang_unit
+        THESE_CELL_DETAILS['angle']['unit'] = ang_unit
 
         super().__init__(
             'lattice',
@@ -107,10 +107,10 @@ class Lattice(BaseObj):
         if angle_gamma is not None:
             self.angle_gamma = angle_gamma
 
-        if THESE_CELL_DETAILS['angle']['units'] is not CELL_DETAILS['angle']['units']:
-            self.angle_alpha.convert_unit(CELL_DETAILS['angle']['units'])
-            self.angle_beta.convert_unit(CELL_DETAILS['angle']['units'])
-            self.angle_gamma.convert_unit(CELL_DETAILS['angle']['units'])
+        if THESE_CELL_DETAILS['angle']['unit'] is not CELL_DETAILS['angle']['unit']:
+            self.angle_alpha.convert_unit(CELL_DETAILS['angle']['unit'])
+            self.angle_beta.convert_unit(CELL_DETAILS['angle']['unit'])
+            self.angle_gamma.convert_unit(CELL_DETAILS['angle']['unit'])
 
         self.interface = interface
 
@@ -246,7 +246,7 @@ class Lattice(BaseObj):
         :return: *a* lattice parameter
         :rtype: float
         """
-        return self.length_a.raw_value
+        return self.length_a.value
 
     @a.setter
     def a(self, new_a_value: float):
@@ -268,7 +268,7 @@ class Lattice(BaseObj):
         :return: *b* lattice parameter
         :rtype: float
         """
-        return self.length_b.raw_value
+        return self.length_b.value
 
     @b.setter
     def b(self, new_b_value: float):
@@ -290,7 +290,7 @@ class Lattice(BaseObj):
         :return: *c* lattice parameter
         :rtype: float
         """
-        return self.length_c.raw_value
+        return self.length_c.value
 
     @c.setter
     def c(self, new_c_value: float):
@@ -312,7 +312,7 @@ class Lattice(BaseObj):
         :return: *alpha* lattice parameter
         :rtype: float
         """
-        return self.angle_alpha.raw_value
+        return self.angle_alpha.value
 
     @alpha.setter
     def alpha(self, new_alpha_value: float):
@@ -334,7 +334,7 @@ class Lattice(BaseObj):
         :return: *beta* lattice parameter
         :rtype: float
         """
-        return self.angle_beta.raw_value
+        return self.angle_beta.value
 
     @beta.setter
     def beta(self, new_beta_value: float):
@@ -356,7 +356,7 @@ class Lattice(BaseObj):
         :return: *gamma* lattice parameter
         :rtype: float
         """
-        return self.angle_gamma.raw_value
+        return self.angle_gamma.value
 
     @gamma.setter
     def gamma(self, new_gamma_value: float):
@@ -410,7 +410,8 @@ class Lattice(BaseObj):
         """
         m = self.matrix
         vol = float(abs(np.dot(np.cross(m[0], m[1]), m[2])))
-        return ureg.Quantity(vol, units=self.length_a.unit * self.length_b.unit * self.length_c.unit)
+        unit = ureg(self.length_a.unit) * ureg(self.length_b.unit) * ureg(self.length_c.unit)
+        return ureg.Quantity(vol, units=unit)
 
     @property
     def inv_matrix(self) -> np.ndarray:
@@ -615,20 +616,18 @@ class Lattice(BaseObj):
     # noinspection PyStringFormat
     def __repr__(self) -> str:
         return (
-            '<Lattice: (a: {:.2f} {:~P}, b: {:.2f} {:~P}, c: {:.2f}{:~P}, alpha: {:.2f} {:~P}, beta: {:.2f} {:~P}, '
-            ''
-            'gamma: {:.2f} {:~P}>'.format(
-                self.length_a.raw_value,
+            '<Lattice: (a: {:.2f} {}, b: {:.2f} {}, c: {:.2f} {}, alpha: {:.2f} {}, beta: {:.2f} {}, gamma: {:.2f} {}>'.format(
+                self.length_a.value,
                 self.length_a.unit,
-                self.length_b.raw_value,
+                self.length_b.value,
                 self.length_b.unit,
-                self.length_c.raw_value,
+                self.length_c.value,
                 self.length_c.unit,
-                self.angle_alpha.raw_value,
+                self.angle_alpha.value,
                 self.angle_alpha.unit,
-                self.angle_beta.raw_value,
+                self.angle_beta.value,
                 self.angle_beta.unit,
-                self.angle_gamma.raw_value,
+                self.angle_gamma.value,
                 self.angle_gamma.unit,
             )
         )
@@ -768,12 +767,12 @@ class PeriodicLattice(Lattice):
 
     @classmethod
     def from_lattice_and_spacegroup(cls: Type[L], lattice: Lattice, spacegroup: SpaceGroup):
-        length_a = lattice.length_a.raw_value
-        length_b = lattice.length_b.raw_value
-        length_c = lattice.length_c.raw_value
-        angle_alpha = lattice.angle_alpha.raw_value
-        angle_beta = lattice.angle_beta.raw_value
-        angle_gamma = lattice.angle_gamma.raw_value
+        length_a = lattice.length_a.value
+        length_b = lattice.length_b.value
+        length_c = lattice.length_c.value
+        angle_alpha = lattice.angle_alpha.value
+        angle_beta = lattice.angle_beta.value
+        angle_gamma = lattice.angle_gamma.value
 
         return cls(
             length_a,
@@ -814,7 +813,8 @@ class PeriodicLattice(Lattice):
         ]
         for par in pars:
             new_con = {con: par.user_constraints[con] for con in par.user_constraints.keys() if not con.startswith('sg_')}
-            par.user_constraints = new_con
+            if new_con:
+                par.user_constraints = new_con
             if not par.enabled:
                 par.enabled = True
 

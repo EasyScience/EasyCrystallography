@@ -22,7 +22,7 @@ _MAX_LABEL_LEN = 130
 
 class FakeItem:
     def __init__(self, value: float, error=None, fixed: bool = None):
-        self.raw_value = value
+        self.value = value
         if fixed is not None:
             self.fixed = fixed
             self.error = 0
@@ -39,7 +39,7 @@ class ItemHolder:
     def __init__(self, item, decimal_places: int = 8):
         self.maxlen = _MAX_LEN
 
-        self.value = item.raw_value
+        self.value = item.value
         self.fixed = None
         self.error = None
         self.decimal_places = decimal_places
@@ -341,7 +341,7 @@ class StarSection(StarBase):
             raise AttributeError
         if name_conversions is None:
             name_conversions = [[k1, k2] for k1, k2 in zip(self.labels, self.data[0]._kwargs.keys())]
-        new_object = cls.from_pars(**{k[0]: self.data[0]._kwargs[k[1]].raw_value for k in name_conversions})
+        new_object = cls.from_pars(**{k[0]: self.data[0]._kwargs[k[1]].value for k in name_conversions})
         for key in name_conversions:
             attr = getattr(new_object, key[0])
             if hasattr(self.data[0]._kwargs[key[1]], 'fixed'):
@@ -476,7 +476,7 @@ class StarLoop(StarBase):
             if name_conversions is None:
                 keys = [key for key in self.data[idx]._kwargs.keys() if key not in self.exclude]
                 name_conversions = [[k, k] for k in keys]
-            new_object = cls_inner.from_pars(**{k[0]: self.data[idx]._kwargs[k[1]].raw_value for k in name_conversions})
+            new_object = cls_inner.from_pars(**{k[0]: self.data[idx]._kwargs[k[1]].value for k in name_conversions})
             for key in name_conversions:
                 attr = getattr(new_object, key[0])
                 if hasattr(self.data[idx]._kwargs[key[1]], 'fixed'):
@@ -494,9 +494,9 @@ class StarLoop(StarBase):
             raise AttributeError('There must be the same number of entries in both StarLoops')
         joint = StarLoop.from_string(str(self))
         for dataset in otherLoop.data:
-            lookup_value = dataset._kwargs['label'].raw_value
+            lookup_value = dataset._kwargs['label'].value
             try:
-                lookup_idx = [d._kwargs['label'].raw_value for d in self.data].index(lookup_value)
+                lookup_idx = [d._kwargs['label'].value for d in self.data].index(lookup_value)
             except ValueError:
                 raise AttributeError('Both StarLoops must contain the joining same keys')
             joint.data[lookup_idx]._kwargs.update(dataset._kwargs)

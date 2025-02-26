@@ -9,7 +9,7 @@ from typing import Dict
 from typing import Union
 
 import periodictable as pt
-from easyscience.Objects.ObjectClasses import Descriptor
+from easyscience.Objects.variable import DescriptorStr as Descriptor
 from easyscience.Utils.classTools import addProp
 from easyscience.Utils.classTools import removeProp
 

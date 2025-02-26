@@ -13,8 +13,8 @@ from typing import Union
 
 import numpy as np
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.ObjectClasses import Descriptor
-from easyscience.Objects.ObjectClasses import Parameter
+from easyscience.Objects.variable import DescriptorStr as Descriptor
+from easyscience.Objects.variable import Parameter
 from easyscience.Utils.classTools import addProp
 from easyscience.Utils.classTools import removeProp
 
@@ -31,7 +31,7 @@ _ANIO_DETAILS = {
         'description': 'Isotropic magnetic susceptibility parameter.',
         'url': 'https://docs.easydiffraction.org/lib/dictionaries/_atom_site/',
         'value': 0.0,
-        'units': 'T^-1',
+        'unit': 'T^-1',
         'fixed': True,
     },
     'Ciso': {
@@ -40,7 +40,7 @@ _ANIO_DETAILS = {
         'components.',
         'value': 0.0,
         'max': np.inf,
-        'units': 'T^-1',
+        'unit': 'T^-1',
         'fixed': True,
     },
 }
@@ -55,14 +55,14 @@ class MSPBase(BaseObj):
         matrix = np.zeros([3, 3])
         pars = self.get_parameters()
         if len(pars) == 1:
-            np.fill_diagonal(matrix, pars[0].raw_value)
+            np.fill_diagonal(matrix, pars[0].value)
         elif len(pars) == 6:
-            matrix[0, 0] = pars[0].raw_value
-            matrix[0, 1] = pars[1].raw_value
-            matrix[0, 2] = pars[2].raw_value
-            matrix[1, 1] = pars[3].raw_value
-            matrix[1, 2] = pars[4].raw_value
-            matrix[2, 2] = pars[5].raw_value
+            matrix[0, 0] = pars[0].value
+            matrix[0, 1] = pars[1].value
+            matrix[0, 2] = pars[2].value
+            matrix[1, 1] = pars[3].value
+            matrix[1, 2] = pars[4].value
+            matrix[2, 2] = pars[5].value
         return matrix
 
 
@@ -143,7 +143,7 @@ class MagneticSusceptibility(BaseObj):
     def __init__(self, msp_type: Union[Descriptor, str], interface: Optional = None, **kwargs):
         if isinstance(msp_type, str):
             msp_type = Descriptor('msp_type', msp_type)
-        msp_class_name = msp_type.raw_value
+        msp_class_name = msp_type.value
         if msp_class_name in _AVAILABLE_ISO_TYPES.keys():
             msp_class = _AVAILABLE_ISO_TYPES[msp_class_name]
             if 'msp_class' in kwargs:

@@ -85,5 +85,5 @@ def test_Atoms_get_item_str(sites: List[Site]):
     atoms = Atoms(name, *sites)
 
     for site in sites:
-        atom = atoms[site.label.raw_value]
+        atom = atoms[site.label.value]
         assert atom.label == site.label

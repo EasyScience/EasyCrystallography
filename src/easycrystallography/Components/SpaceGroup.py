@@ -16,9 +16,11 @@ from typing import Union
 import gemmi
 import numpy as np
 from easyscience.Objects.ObjectClasses import BaseObj
-from easyscience.Objects.ObjectClasses import Descriptor
+from easyscience.Objects.variable import DescriptorAnyType
+from easyscience.Objects.variable import DescriptorStr
 
 from easycrystallography.Symmetry.functions import get_default_it_coordinate_system_code_by_it_number
+from easycrystallography.Symmetry.functions import get_spacegroup_by_name_ext
 from easycrystallography.Symmetry.SymOp import SymmOp
 
 SG_DETAILS = {
@@ -52,25 +54,25 @@ if TYPE_CHECKING:
     T = Union[S, npt.ArrayLike]
 
 
-_D_REDIRECT = deepcopy(Descriptor._REDIRECT)
-_D_REDIRECT['value'] = lambda obj: ';'.join([r.as_xyz_string() for r in obj.raw_value.tolist()])
+_D_REDIRECT = deepcopy(DescriptorStr._REDIRECT)
+_D_REDIRECT['value'] = lambda obj: ';'.join([r.as_xyz_string() for r in obj.value.tolist()])
 
 
-class easyOp(Descriptor):
+class easyOp(DescriptorAnyType):
     _REDIRECT = _D_REDIRECT
 
 
 class SpaceGroup(BaseObj):
-    _space_group_HM_name: ClassVar[Descriptor]
-    _setting: ClassVar[Descriptor]
-    _symmetry_ops: ClassVar[Descriptor]
+    _space_group_HM_name: ClassVar[DescriptorStr]
+    _setting: ClassVar[DescriptorStr]
+    _symmetry_ops: ClassVar[DescriptorAnyType]
 
     _REDIRECT = {'symmetry_ops': lambda obj: None if obj._sg_data is not None else obj._symmetry_ops}
 
     def __init__(
         self,
-        space_group_HM_name: Optional[Descriptor, str] = None,
-        setting: Optional[Descriptor, str] = None,
+        space_group_HM_name: Optional[DescriptorStr, str] = None,
+        setting: Optional[DescriptorStr, str] = None,
         symmetry_ops: Optional[List[SymmOp]] = None,
         interface: Optional[iF] = None,
     ):
@@ -85,19 +87,25 @@ class SpaceGroup(BaseObj):
 
         super(SpaceGroup, self).__init__(
             'space_group',
-            _space_group_HM_name=Descriptor(**SG_DETAILS['space_group_HM_name']),
-            _setting=Descriptor(**SG_DETAILS['setting']),
+            _space_group_HM_name=DescriptorStr(**SG_DETAILS['space_group_HM_name']),
+            _setting=DescriptorStr(**SG_DETAILS['setting']),
             _symmetry_ops=easyOp(**SG_DETAILS['symmetry_ops']),
         )
 
         if space_group_HM_name:
             self._space_group_HM_name = space_group_HM_name
         if setting is not None:
+            if isinstance(setting, int):
+                setting = str(setting)
+            elif isinstance(setting, str):
+                setting = setting.strip()
+            elif isinstance(setting, float):
+                setting = str(int(setting))
             self._setting = setting
 
         kwargs = {
-            'new_spacegroup': self._space_group_HM_name.raw_value,
-            'new_setting': self._setting.raw_value,
+            'new_spacegroup': self._space_group_HM_name.value,
+            'new_setting': self._setting.value,
             'operations_set': None,
             'set_internal': True,
         }
@@ -276,7 +284,6 @@ class SpaceGroup(BaseObj):
                 raise ValueError(f"Spacegroup '{new_spacegroup}' not found in database.")
 
             settings = self.find_settings_by_number(sg_data.number)
-            hm_name = sg_data.hm
             reference = get_default_it_coordinate_system_code_by_it_number(sg_data.number)
 
             if new_setting is None or new_setting == '' or new_setting == '\x00':
@@ -288,18 +295,16 @@ class SpaceGroup(BaseObj):
                 except ValueError:
                     pass
                 new_setting = str(new_setting)
-                if new_setting != reference:
-                    # modify the space group with the new setting
-                    new_sg_data = gemmi.find_spacegroup_by_name(sg_data.hm + ':' + new_setting)
-                    if new_sg_data is None and new_setting in settings:
-                        # this can be because the setting is the "default" setting which gemmi treats as a blank
-                        new_sg_data = gemmi.find_spacegroup_by_name(sg_data.hm + ':' + reference)
-                    if new_sg_data is None:
-                        raise ValueError(f"Spacegroup '{new_spacegroup}:{new_setting}' not found in database.")
-                    sg_data = new_sg_data
-                    setting = get_default_it_coordinate_system_code_by_it_number(sg_data.number)
-                else:
-                    setting = new_setting
+                # modify the space group with the new setting
+                new_sg_data = get_spacegroup_by_name_ext(sg_data.number, new_setting)
+                if new_sg_data is None and new_setting in settings:
+                    # this can be because the setting is the "default" setting which gemmi treats as a blank
+                    # new_sg_data = gemmi.find_spacegroup_by_name(sg_data.hm + ':' + reference)
+                    new_sg_data = get_spacegroup_by_name_ext(sg_data.number, reference)
+                if new_sg_data is None:
+                    raise ValueError(f"Spacegroup '{new_spacegroup}:{new_setting}' not found in database.")
+                sg_data = new_sg_data
+                setting = get_default_it_coordinate_system_code_by_it_number(sg_data.number)
                 if new_setting in settings:
                     setting = new_setting
 
@@ -311,13 +316,12 @@ class SpaceGroup(BaseObj):
             ]
         else:
             sg_data = None
-            hm_name = 'custom'
             if isinstance(operations_set, str):
                 operations_set = [SymmOp.from_xyz_string(s) for s in operations_set.split(';')]
             operations = operations_set
         if set_internal:
             self._sg_data = sg_data
-            self._space_group_HM_name.value = hm_name
+            self._space_group_HM_name.value = sg_data.hm
             self._setting.value = setting
             self._symmetry_ops.value = operations
         return sg_data, setting, operations
@@ -327,13 +331,13 @@ class SpaceGroup(BaseObj):
         return self._sg_data is None
 
     @property
-    def setting(self) -> Optional[Descriptor]:
+    def setting(self) -> Optional[DescriptorStr]:
         """
         Space group setting. If the space group does not have a setting, this will be None.
 
         :return: Space group setting
         """
-        setting_str = self._setting.raw_value
+        setting_str = self._setting.value
         if setting_str == '\x00':
             return None  # no setting
         return self._setting
@@ -345,17 +349,17 @@ class SpaceGroup(BaseObj):
 
         :param new_setting: Space group setting
         """
-        _, setting, _ = self.__on_change(self._space_group_HM_name.raw_value, new_setting, set_internal=True)
+        _, setting, _ = self.__on_change(self._space_group_HM_name.value, new_setting, set_internal=True)
 
     @property
-    def it_coordinate_system_code(self) -> Optional[Descriptor]:
+    def it_coordinate_system_code(self) -> Optional[DescriptorStr]:
         """
         Space group setting. If the space group does not have a setting, this will be None.
         Equivalent to setting, defined to satisfy CIF Template
 
         :return: Space group setting
         """
-        setting_str = self._setting.raw_value
+        setting_str = self._setting.value
         if setting_str == '\x00':
             return None  # no setting
         return self._setting
@@ -368,7 +372,7 @@ class SpaceGroup(BaseObj):
 
         :param new_setting: Space group setting
         """
-        _, setting, _ = self.__on_change(self._space_group_HM_name.raw_value, new_setting, set_internal=True)
+        _, setting, _ = self.__on_change(self._space_group_HM_name.value, new_setting, set_internal=True)
 
     @property
     def setting_str(self) -> str:
@@ -379,14 +383,14 @@ class SpaceGroup(BaseObj):
         """
         if self.setting is None:
             return ''
-        return self._setting.raw_value
+        return self._setting.value
 
     @property
-    def space_group_HM_name(self) -> Descriptor:
+    def space_group_HM_name(self) -> DescriptorStr:
         """
         Space group name as defined by a Hermann-Mauguin symbol
 
-        :return: Space group name as easyCore Descriptor
+        :return: Space group name as EasyScience DescriptorStr
         """
         return self._space_group_HM_name
 
@@ -400,12 +404,12 @@ class SpaceGroup(BaseObj):
         self.__on_change(value, set_internal=True)
 
     @property
-    def name_hm_alt(self) -> Descriptor:
+    def name_hm_alt(self) -> DescriptorStr:
         """
         Space group name as defined by a Hermann-Mauguin symbol
         Equivalent to space_group_HM_name, defined to satisfy CIF Template
 
-        :return: Space group name as easyCore Descriptor
+        :return: Space group name as EasyScience DescriptorStr
         """
         return self._space_group_HM_name
 
@@ -426,7 +430,7 @@ class SpaceGroup(BaseObj):
 
         :return: Space group name as a string
         """
-        return self._space_group_HM_name.raw_value
+        return self._space_group_HM_name.value
 
     @property
     def name_hall(self) -> str:
@@ -516,7 +520,7 @@ class SpaceGroup(BaseObj):
 
         :return: List of symmetry operations of the space group
         """
-        return self._symmetry_ops.raw_value
+        return self._symmetry_ops.value
 
     @symmetry_ops.setter
     def symmetry_ops(self, new_ops: List[SymmOp]) -> NoReturn:
@@ -526,7 +530,7 @@ class SpaceGroup(BaseObj):
         :param new_ops: List of new symmetry operations
         """
         self.__on_change(
-            self._space_group_HM_name.raw_value,
+            self._space_group_HM_name.value,
             operations_set=new_ops,
             set_internal=True,
         )
@@ -538,7 +542,7 @@ class SpaceGroup(BaseObj):
 
         :return: String of symmetry operations of the space group
         """
-        return ';'.join([op.as_xyz_string() for op in self._symmetry_ops.raw_value])
+        return ';'.join([op.as_xyz_string() for op in self._symmetry_ops.value])
 
     @property
     def is_reference_setting(self) -> bool:
